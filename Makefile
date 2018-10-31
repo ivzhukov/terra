@@ -54,7 +54,7 @@ endif
 #LUAJIT_VERSION_EXTRA =.0-beta2
 
 LUAJIT_VERSION_BASE ?= 2.1
-LUAJIT_VERSION_EXTRA ?= .0-beta3
+LUAJIT_VERSION_EXTRA ?= .0-beta2
 LUAJIT_VERSION ?= LuaJIT-$(LUAJIT_VERSION_BASE)$(LUAJIT_VERSION_EXTRA)
 LUAJIT_EXECUTABLE ?= luajit-$(LUAJIT_VERSION_BASE)$(LUAJIT_VERSION_EXTRA)
 LUAJIT_URL ?= https://github.com/koriakin/LuaJIT.git
@@ -204,7 +204,7 @@ build/$(LUAJIT_DIR):
 	(git clone -b $(LUAJIT_BRANCH) $(LUAJIT_URL) $(LUAJIT_DIR))
 
 build/lib/libluajit-5.1.a: build/$(LUAJIT_DIR)
-	(cd $(LUAJIT_DIR); make install PREFIX=$(realpath build) CC=$(CC) STATIC_CC="$(CC) -fPIC" XCFLAGS=-DLUAJIT_ENABLE_GC64)
+	(cd $(LUAJIT_DIR); make install PREFIX=$(realpath build) CC=$(CC) STATIC_CC="$(CC) -fPIC" XCFLAGS=-DLUAJIT_ENABLE_GC64; ln -sf luajit-2.1.0-beta2 $(realpath build)/bin/luajit)
 
 release/include/terra/%.h:  $(LUAJIT_INCLUDE)/%.h $(LUAJIT_LIB) 
 	cp $(LUAJIT_INCLUDE)/$*.h $@
