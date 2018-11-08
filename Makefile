@@ -204,7 +204,7 @@ build/$(LUAJIT_DIR):
 	(git clone -b $(LUAJIT_BRANCH) $(LUAJIT_URL) $(LUAJIT_DIR))
 
 build/lib/libluajit-5.1.a: build/$(LUAJIT_DIR)
-	(cd $(LUAJIT_DIR); make install PREFIX=$(realpath build) CC=$(CC) STATIC_CC="$(CC) -fPIC" XCFLAGS=-DLUAJIT_ENABLE_GC64; ln -sf luajit-2.1.0-beta2 $(realpath build)/bin/luajit)
+	(cd $(LUAJIT_DIR); make install PREFIX=$(realpath build) CC=$(CC) STATIC_CC="$(CC) -fPIC"; ln -sf luajit-2.1.0-beta2 $(realpath build)/bin/luajit)
 
 release/include/terra/%.h:  $(LUAJIT_INCLUDE)/%.h $(LUAJIT_LIB) 
 	cp $(LUAJIT_INCLUDE)/$*.h $@
