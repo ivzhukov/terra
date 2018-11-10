@@ -245,6 +245,9 @@ FLAGS += -DTERRA_LLVM_HEADERS_HAVE_NDEBUG
 endif
 
 LIBOBJS = tkind.o tcompiler.o tllvmutil.o tcwrapper.o tinline.o terra.o lparser.o lstring.o lobject.o lzio.o llex.o lctype.o treadnumber.o tcuda.o tdebug.o tinternalizedfiles.o lj_strscan.o
+ifeq ($(strip $(TERRA_USE_PUC_LUA)),1)
+LIBOBJS += tffi.o tffi_ctype.o tffi_parser.o
+endif
 LIBLUA = terralib.lua terralib_jit.lua terralib_puc.lua strict.lua cudalib.lua asdl.lua terralist.lua terrautil.lua luatypeannotation.lua
 
 EXEOBJS = main.o linenoise.o

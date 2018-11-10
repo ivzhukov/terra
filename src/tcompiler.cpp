@@ -472,12 +472,18 @@ static void InitializeJIT(TerraCompilationUnit * CU) {
 #endif
 }
 
-#if defined(_WIN32)
+#if defined _WIN32 && defined UNDER_CE
+#define TERRA_OS "WindowsCE"
+#elif defined _WIN32
 #define TERRA_OS "Windows"
-#elif defined(__linux__)
-#define TERRA_OS "Linux"
-#elif defined(__MACH__) && defined(__APPLE__)
+#elif defined __APPLE__ && defined __MACH__
 #define TERRA_OS "OSX"
+#elif defined __linux__
+#define TERRA_OS "Linux"
+#elif defined __FreeBSD__ || defined __OpenBSD__ || defined __NetBSD__
+#define TERRA_OS "BSD"
+#elif defined unix || defined __unix__ || defined __unix || defined _POSIX_VERSION || defined _XOPEN_VERSION
+#define TERRA_OS "POSIX"
 #else
 #define TERRA_OS "Other"
 #endif
