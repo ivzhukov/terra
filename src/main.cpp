@@ -84,7 +84,9 @@ int main(int argc, char ** argv) {
     lua_State * L = luaL_newstate();
     luaL_openlibs(L);
 #ifdef TERRA_USE_PUC_LUA
-    luaopen_ffi(L);
+    lua_pushcfunction(L, luaopen_ffi);
+    lua_call(L, 0, 1);
+    lua_setglobal(L, "ffi");
 #endif
     lua_atpanic(L,luapanic);
     terra_Options options;
