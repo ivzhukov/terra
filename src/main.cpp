@@ -75,7 +75,7 @@ static int luapanic (lua_State * L) { //so that we can set a debugger breakpoint
 
 #ifdef TERRA_USE_PUC_LUA
 extern "C" {
-  int luaopen_ffi(lua_State* L);
+  void preload_ffi(lua_State* L);
 }
 #endif
 
@@ -84,9 +84,7 @@ int main(int argc, char ** argv) {
     lua_State * L = luaL_newstate();
     luaL_openlibs(L);
 #ifdef TERRA_USE_PUC_LUA
-    lua_pushcfunction(L, luaopen_ffi);
-    lua_call(L, 0, 1);
-    lua_setglobal(L, "ffi");
+    preload_ffi(L);
 #endif
     lua_atpanic(L,luapanic);
     terra_Options options;

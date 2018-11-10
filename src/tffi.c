@@ -1263,7 +1263,7 @@ static int cdata_gc(lua_State* L)
 
     /* call the gc func if there is any registered */
     lua_pushvalue(L, 1);
-    lua_rawget(L, lua_upvalueindex(2));
+    lua_rawget(L, lua_upvalueindex(1));
     if (!lua_isnil(L, -1)) {
         lua_pushvalue(L, 1);
         lua_pcall(L, 1, 0, 0);
@@ -3008,4 +3008,17 @@ int luaopen_ffi(lua_State* L)
     lua_setfield(L, -2, "number"); /* ffi.number */
 
     return 1;
+}
+
+static luaL_Reg preload_list[] = {
+  {"ffi", luaopen_ffi},
+  {NULL, NULL}
+};
+
+void preload_ffi(lua_State* L)
+{
+  lua_getglobal(L, "package");
+  lua_getfield(L, -1, "preload");
+  luaL_setfuncs(L, preload_list, 0);
+  lua_pop(L, 2);
 }
