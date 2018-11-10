@@ -2963,7 +2963,7 @@ int luaopen_ffi(lua_State* L)
 
     lua_newtable(L);
     push_upval(L, &gc_key);
-    setup_mt(L, cdata_mt, 2);
+    setup_mt(L, cdata_mt, 1);
     set_upval(L, &cdata_mt_key);
 
     lua_newtable(L);
