@@ -721,12 +721,6 @@ local function newweakkeytable()
     return setmetatable({},weakkeys)
 end
 
-local function cdatawithdestructor(ud,dest)
-    local cd = ffi.cast("void*",ud)
-    ffi.gc(cd,dest)
-    return cd
-end
-
 terra.target = {}
 terra.target.__index = terra.target
 function terra.istarget(a) return getmetatable(a) == terra.target end
@@ -737,7 +731,7 @@ function terra.newtarget(tbl)
         CPU = CPU or ""
         Features = Features or ""
     end
-    return setmetatable({ llvm_target = cdatawithdestructor(terra.inittarget(Triple,CPU,Features,FloatABIHard),terra.freetarget),
+    return setmetatable({ llvm_target = terra.inittarget(Triple,CPU,Features,FloatABIHard),
                           Triple = Triple,
                           cnametostruct = { general = {}, tagged = {}}  --map from llvm_name -> terra type used to make c structs unique per llvm_name
                         },terra.target)
@@ -763,7 +757,7 @@ function terra.newcompilationunit(target,opt)
     assert(terra.istarget(target),"expected a target object")
     return setmetatable({ symbols = newweakkeytable(), 
                           collectfunctions = opt,
-                          llvm_cu = cdatawithdestructor(terra.initcompilationunit(target.llvm_target,opt),terra.freecompilationunit) },compilationunit) -- mapping from Types,Functions,Globals,Constants -> llvm value associated with them for this compilation
+                          llvm_cu = terra.initcompilationunit(target.llvm_target,opt) },compilationunit) -- mapping from Types,Functions,Globals,Constants -> llvm value associated with them for this compilation
 end
 function compilationunit:addvalue(k,v)
     if type(k) ~= "string" then k,v = nil,k end
