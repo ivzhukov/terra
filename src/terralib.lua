@@ -3354,22 +3354,17 @@ local function fileparts(path)
     local pattern = "[%s]([^%s]*)"
     return path:gmatch(pattern:format(fileseparators,fileseparators))
 end
-function terra.registerinternalizedfiles(names,contents,sizes)
-    names,contents,sizes = ffi.cast("const char **",names),ffi.cast("uint8_t **",contents),ffi.cast("int*",sizes)
-    for i = 0,math.huge do
-        if names[i] == nil then break end
-        local name,content,size = ffi.string(names[i]),contents[i],sizes[i]
-        local cur = internalizedfiles
-        for segment in fileparts(name) do
-            cur.children = cur.children or {}
-            cur.kind = "directory"
-            if not cur.children[segment] then
-                cur.children[segment] = {} 
-            end
-            cur = cur.children[segment]
+function terra.registerinternalizedfile(name,content,size)
+    local cur = internalizedfiles
+    for segment in fileparts(name) do
+        cur.children = cur.children or {}
+        cur.kind = "directory"
+        if not cur.children[segment] then
+            cur.children[segment] = {}
         end
-        cur.contents,cur.size,cur.kind =  terra.pointertolightuserdata(content), size, "file"
+        cur = cur.children[segment]
     end
+    cur.contents,cur.size,cur.kind =  content, size, "file"
 end
 
 local function getinternalizedfile(path)
