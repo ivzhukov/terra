@@ -47,6 +47,7 @@ using namespace llvm;
     _(inittarget,1) \
     _(initcompilationunit,1) \
     _(compilationunitaddvalue,1) /*entry point from lua into compiler to generate LLVM for a function, other functions it calls may not yet exist*/\
+    _(freecompilationunit,0) \
     _(jit,1) /*entry point from lua into compiler to actually invoke the JIT by calling getPointerToFunction*/\
     _(llvmsizeof,1) \
     _(disassemble,1) \

@@ -770,7 +770,7 @@ function compilationunit:jitvalue(v)
 end
 function compilationunit:free()
     assert(not self.collectfunctions, "cannot explicitly release a compilation unit with auto-delete functions")
-    ffi.gc(self.llvm_cu,nil) --unregister normal destructor object
+    getmetatable(self.llvm_cu).__gc = nil
     terra.freecompilationunit(self.llvm_cu)
 end
 function compilationunit:dump() terra.dumpmodule(self.llvm_cu) end
@@ -1439,9 +1439,13 @@ do
             
             --create a map from this ctype to the terra type to that we can implement terra.typeof(cdata)
             local ctype = ffi.typeof(self.cachedcstring)
-            types.ctypetoterra[tonumber(ctype)] = self
-            local rctype = ffi.typeof(self.cachedcstring.."&")
-            types.ctypetoterra[tonumber(rctype)] = self
+            print("FIXME: Elliott: need unique ID of type")
+            -- types.ctypetoterra[tonumber(ctype)] = self
+            types.ctypetoterra[ctype] = self
+            -- FIXME: This is unimplemented in FFI wrapper for Lua
+            -- local rctype = ffi.typeof(self.cachedcstring.."&")
+            -- -- types.ctypetoterra[tonumber(rctype)] = self
+            -- types.ctypetoterra[rctype] = self
             
             if self:isstruct() then
                 local function index(obj,idx)
