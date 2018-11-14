@@ -3,6 +3,8 @@ local ffi = require("ffi")
 local asdl = require("asdl")
 local List = asdl.List
 
+local iscdata = asdl.iscdata
+
 -- LINE COVERAGE INFORMATION, must run test script with luajit and not terra to avoid overwriting coverage with old version
 if false then
     local converageloader = loadfile("coverageinfo.lua")
@@ -2118,7 +2120,7 @@ function typecheck(topexp,luaenv,simultaneousdefinitions)
             elseif terra.istree(v) then
                 --if this is a raw tree, we just drop it in place and hope the user knew what they were doing
                 return v
-            elseif type(v) == "cdata" then
+            elseif iscdata(type(v)) then
                 local typ = terra.typeof(v)
                 if typ:isaggregate() then --when an aggregate is directly referenced from Terra we get its pointer
                                           --a constant would make an entire copy of the object
@@ -3486,7 +3488,7 @@ local function createunpacks(tupleonly)
         return result
     end
     local function unpacklua(cdata,from,to)
-        local t = type(cdata) == "cdata" and terra.typeof(cdata)
+        local t = iscdata(type(cdata)) and terra.typeof(cdata)
         if not t or not t:isstruct() or (tupleonly and t.convertible ~= "tuple") then 
           return cdata
         end
@@ -4280,7 +4282,7 @@ function terra.constant(typ,init)
         typ,init = nil,typ
     end
     if typ == nil then --try to infer the type, and if successful build the constant
-        if type(init) == "cdata" then
+        if iscdata(type(init)) then
             typ = terra.typeof(init)
         elseif type(init) == "number" then
             typ = (terra.isintegral(init) and terra.types.int) or terra.types.double
@@ -4302,7 +4304,7 @@ function terra.constant(typ,init)
         return terra.newquote(newobject(anchor,T.literal,init,typ))
     end
     local orig = init -- hold anchor until we capture the value
-    if type(init) ~= "cdata" or terra.typeof(init) ~= typ then
+    if not iscdata(type(init)) or terra.typeof(init) ~= typ then
         init = terra.cast(typ,init)
     end
     if not typ:isaggregate() then
@@ -4323,7 +4325,7 @@ _G["constant"] = terra.constant
 
 -- equivalent to ffi.typeof, takes a cdata object and returns associated terra type object
 function terra.typeof(obj)
-    if type(obj) ~= "cdata" then
+    if not iscdata(type(obj)) then
         error("cannot get the type of a non cdata object")
     end
     return terra.types.ctypetoterra[tonumber(ffi.typeof(obj))]
