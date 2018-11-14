@@ -1,3 +1,22 @@
+local function isluajit()
+    return type(rawget(_G,"jit")) == "table"
+end
+
+local iscdata
+if isluajit() then
+    function iscdata(v)
+        return type(v) == "cdata"
+    end
+else
+    local ffi = require("ffi")
+    local function hastype(v)
+        return ffi.typeof(v)
+    end
+    function iscdata(v)
+        return type(v) == "userdata" and pcall(hastype, v)
+    end
+end
+
 local List = {}
 List.__index = List
 for k,v in pairs(table) do
@@ -199,7 +218,11 @@ local function parseAll(text)
 end
 
 local function checkbuiltin(t)
-    return function(v) return type(v) == t end
+    if t == "cdata" then
+        return function(v) return iscdata(v) end
+    else
+        return function(v) return type(v) == t end
+    end
 end
 
 local function checkoptional(checkt)
@@ -434,4 +457,4 @@ function Context:Define(text)
         end
     end
 end
-package.loaded["asdl"] = { NewContext = NewContext, List = List }
+package.loaded["asdl"] = { NewContext = NewContext, List = List, iscdata = iscdata }
