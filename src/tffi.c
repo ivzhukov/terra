@@ -2230,7 +2230,7 @@ static int ctype_tostring(lua_State* L) {
     check_ctype(L, 1, &ct);
     assert(lua_gettop(L) == 2);
     push_type_name(L, -1, &ct);
-    lua_pushfstring(L, "ctype<%s> %p", lua_tostring(L, -1), lua_topointer(L, 1));
+    lua_pushfstring(L, "%s", lua_tostring(L, -1));
 
     if (DEBUG_TOSTRING) {
         print_type(L, &ct);
