@@ -42,6 +42,20 @@ extern "C" {
 
 using namespace llvm;
 
+#ifdef TERRA_USE_PUC_LUA
+#include "tffi.h"
+#endif
+
+static const void *tocdata(lua_State *L, int idx) {
+#ifdef TERRA_USE_PUC_LUA
+    // libffi uses a 32 byte header for each cdata object,
+    // which we have to skip here
+    return ((char *)lua_topointer(L, idx) + sizeof(struct cdata));
+#else
+    return lua_topointer(L, idx);
+#endif
+}
+
 #define TERRALIB_FUNCTIONS(_)                                                            \
     _(inittarget, 1)                                                                     \
     _(initcompilationunit, 1)                                                            \
@@ -2177,7 +2191,7 @@ struct FunctionEmitter {
                 TType *typ = typeOfValue(exp);
                 Obj value;
                 exp->pushfield("value");
-                const void *data = lua_topointer(L, -1);
+                const void *data = tocdata(L, -1);
                 assert(data);
                 size_t size = CU->getDataLayout().getTypeAllocSize(typ->type);
                 Value *r;
