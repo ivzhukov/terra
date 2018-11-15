@@ -2124,7 +2124,7 @@ function typecheck(topexp,luaenv,simultaneousdefinitions)
             elseif terra.istree(v) then
                 --if this is a raw tree, we just drop it in place and hope the user knew what they were doing
                 return v
-            elseif iscdata(type(v)) then
+            elseif iscdata(v) then
                 local typ = terra.typeof(v)
                 if typ:isaggregate() then --when an aggregate is directly referenced from Terra we get its pointer
                                           --a constant would make an entire copy of the object
@@ -3492,8 +3492,8 @@ local function createunpacks(tupleonly)
         return result
     end
     local function unpacklua(cdata,from,to)
-        local t = iscdata(type(cdata)) and terra.typeof(cdata)
-        if not t or not t:isstruct() or (tupleonly and t.convertible ~= "tuple") then 
+        local t = iscdata(cdata) and terra.typeof(cdata)
+        if not t or not t:isstruct() or (tupleonly and t.convertible ~= "tuple") then
           return cdata
         end
         local results = terralib.newlist()
@@ -4286,7 +4286,7 @@ function terra.constant(typ,init)
         typ,init = nil,typ
     end
     if typ == nil then --try to infer the type, and if successful build the constant
-        if iscdata(type(init)) then
+        if iscdata(init) then
             typ = terra.typeof(init)
         elseif type(init) == "number" then
             typ = (terra.isintegral(init) and terra.types.int) or terra.types.double
@@ -4308,7 +4308,7 @@ function terra.constant(typ,init)
         return terra.newquote(newobject(anchor,T.literal,init,typ))
     end
     local orig = init -- hold anchor until we capture the value
-    if not iscdata(type(init)) or terra.typeof(init) ~= typ then
+    if not iscdata(init) or terra.typeof(init) ~= typ then
         init = terra.cast(typ,init)
     end
     if not typ:isaggregate() then
@@ -4329,7 +4329,7 @@ _G["constant"] = terra.constant
 
 -- equivalent to ffi.typeof, takes a cdata object and returns associated terra type object
 function terra.typeof(obj)
-    if not iscdata(type(obj)) then
+    if not iscdata(obj) then
         error("cannot get the type of a non cdata object")
     end
     return terra.types.ctypetoterra[tonumber(ffi.typeof(obj))]
