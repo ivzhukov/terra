@@ -1445,14 +1445,11 @@ do
             
             --create a map from this ctype to the terra type to that we can implement terra.typeof(cdata)
             local ctype = ffi.typeof(self.cachedcstring)
-            print("FIXME: Elliott: need unique ID of type")
-            -- types.ctypetoterra[tonumber(ctype)] = self
-            types.ctypetoterra[ctype] = self
+            types.ctypetoterra[tostring(ctype)] = self
             -- FIXME: This is unimplemented in FFI wrapper for Lua
             -- local rctype = ffi.typeof(self.cachedcstring.."&")
-            -- -- types.ctypetoterra[tonumber(rctype)] = self
-            -- types.ctypetoterra[rctype] = self
-            
+            -- types.ctypetoterra[tostring(rctype)] = self
+
             if self:isstruct() then
                 local function index(obj,idx)
                     local method = self:getmethod(idx)
@@ -4217,7 +4214,7 @@ function terra.typeof(obj)
     if not iscdata(obj) then
         error("cannot get the type of a non cdata object")
     end
-    return terra.types.ctypetoterra[tonumber(ffi.typeof(obj))]
+    return terra.types.ctypetoterra[tostring(ffi.typeof(obj))]
 end
 
 --equivalent to Lua's type function, but knows about concepts in Terra to improve error reporting
