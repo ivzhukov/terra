@@ -3,6 +3,7 @@ local ffi = require("ffi")
 local asdl = require("asdl")
 local List = asdl.List
 
+local isluajit = asdl.isluajit
 local iscdata = asdl.iscdata
 
 -- LINE COVERAGE INFORMATION, must run test script with luajit and not terra to avoid overwriting coverage with old version
@@ -1450,10 +1451,14 @@ do
             
             --create a map from this ctype to the terra type to that we can implement terra.typeof(cdata)
             local ctype = ffi.typeof(self.cachedcstring)
-            types.ctypetoterra[tostring(ctype)] = self
-            -- FIXME: This is unimplemented in FFI wrapper for Lua
-            -- local rctype = ffi.typeof(self.cachedcstring.."&")
-            -- types.ctypetoterra[tostring(rctype)] = self
+            -- tonumber(ctype) is LuaJIT-only, so rely on printed representation in PUC Lua
+            local ctype_key = tonumber(ctype) or tostring(ctype)
+            types.ctypetoterra[ctype_key] = self
+            if isluajit() then
+              local rctype = ffi.typeof(self.cachedcstring.."&")
+              local rctype_key = tonumber(rctype) or tostring(rctype)
+              types.ctypetoterra[rctype_key] = self
+            end
 
             if self:isstruct() then
                 local function index(obj,idx)

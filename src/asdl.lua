@@ -421,4 +421,4 @@ function Context:Define(text)
         end
     end
 end
-package.loaded["asdl"] = { NewContext = NewContext, List = List, iscdata = iscdata }
+package.loaded["asdl"] = { NewContext = NewContext, List = List, isluajit = isluajit, iscdata = iscdata }
