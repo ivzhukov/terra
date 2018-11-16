@@ -89,7 +89,7 @@ LUA = $(LUA_PREFIX)/bin/lua
 FLAGS += -DTERRA_USE_PUC_LUA
 FLAGS += -DLUA_COMPAT_ALL # For Lua 5.2+
 
-#rule for packaging lua code into bytecode, put into a header file via geninternalizedfiles.lua
+#rule for packaging lua code into bytecode, put into a header file via genheader.lua
 build/%.bc:	src/%.lua $(PACKAGE_DEPS) $(LUA_LIB)
 	$(LUA_PREFIX)/bin/luac -o $@ $<
 
@@ -113,7 +113,7 @@ LUA_LIB ?= $(LUA_PREFIX)/lib/libluajit-5.1.a
 LUA_INCLUDE ?= $(dir $(shell ls 2>/dev/null $(LUA_PREFIX)/include/luajit-$(LUA_VERSION_BASE)/lua.h || ls 2>/dev/null $(LUA_PREFIX)/include/lua.h || echo $(LUA_PREFIX)/include/luajit-$(LUA_VERSION_BASE)/lua.h))
 LUA ?= $(LUA_PREFIX)/bin/$(LUA_EXECUTABLE)
 
-#rule for packaging lua code into bytecode, put into a header file via geninternalizedfiles.lua
+#rule for packaging lua code into bytecode, put into a header file via genheader.lua
 build/%.bc:	src/%.lua $(PACKAGE_DEPS) $(LUA_LIB)
 	$(LUA) -b -g $< $@
 endif
@@ -260,8 +260,9 @@ LIBLUA = terralib.lua strict.lua cudalib.lua asdl.lua
 
 EXEOBJS = main.o linenoise.o
 
-EMBEDDEDLUA = $(addprefix build/,$(LIBLUA:.lua=.bc))
-GENERATEDHEADERS = $(EMBEDDEDLUA) build/clangpaths.h build/internalizedfiles.h
+EMBEDDEDLUABC = $(addprefix build/,$(LIBLUA:.lua=.bc))
+EMBEDDEDLUAH = $(addprefix build/,$(LIBLUA:.lua=.h))
+GENERATEDHEADERS = $(EMBEDDEDLUAH) build/clangpaths.h build/internalizedfiles.h
 
 LUAHEADERS = lua.h lualib.h lauxlib.h luaconf.h
 
@@ -351,6 +352,11 @@ $(EXECUTABLE):	$(addprefix build/, $(EXEOBJS)) $(EXECUTABLE_LIBRARY_DEPENDENCY)
 	$(CXX) $(addprefix build/, $(EXEOBJS)) -o $@ $(LFLAGS) $(LUA_AND_TERRA) $(SUPPORT_LIBRARY_FLAGS) $(TERRA_RPATH_FLAGS)
 	if [ ! -e terra  ]; then ln -s $(EXECUTABLE) terra; fi;
 
+#rule for packaging lua code into a header file
+# fix narrowing warnings by using unsigned char
+build/%.h:	build/%.bc $(PACKAGE_DEPS) src/genheader.lua
+	$(LUA) src/genheader.lua $< $@
+
 #run clang on a C file to extract the header search paths for this architecture
 #genclangpaths.lua find the path arguments and formats them into a C file that is included by the cwrapper
 #to configure the paths
@@ -358,11 +364,11 @@ build/clangpaths.h:	src/dummy.c $(PACKAGE_DEPS) src/genclangpaths.lua
 	$(LUA) src/genclangpaths.lua $@ $(CLANG) $(CUDA_INCLUDES)
 
 TERRA_LIBRARY_FILES=lib/std.t lib/parsing.t
-build/internalizedfiles.h:	$(PACKAGE_DEPS) src/geninternalizedfiles.lua $(TERRA_LIBRARY_FILES) $(EMBEDDEDLUA)
-	$(LUA) src/geninternalizedfiles.lua POSIX $(CLANG_RESOURCE_DIRECTORY) $@
+build/internalizedfiles.h:	$(PACKAGE_DEPS) src/geninternalizedfiles.lua $(TERRA_LIBRARY_FILES) $(EMBEDDEDLUAH)
+	$(LUA) src/geninternalizedfiles.lua POSIX $@ $(CLANG_RESOURCE_DIRECTORY) "%.h$$" $(CLANG_RESOURCE_DIRECTORY) "%.modulemap$$" lib "%.t$$"
 
 clean:
-	rm -rf build/*.o build/*.d $(GENERATEDHEADERS)
+	rm -rf build/*.o build/*.d $(EMBEDDEDLUABC) $(GENERATEDHEADERS)
 	rm -rf $(EXECUTABLE) terra $(LIBRARY) $(LIBRARY_NOLUA) $(LIBRARY_NOLUA_NOLLVM) $(DYNLIBRARY) $(RELEASE_HEADERS) build/llvm_objects build/lua_objects
 
 purge:	clean

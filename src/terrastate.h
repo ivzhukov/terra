@@ -37,6 +37,6 @@ terra_State * terra_getstate(lua_State * L, int closureindex);
 #define DEBUG_ONLY(T) if((T)->options.debug != 0)
 
 //definition in tinternalizedfiles.cpp
-int terra_registerinternalizedfiles(lua_State * L, int terratable);
+void terra_registerinternalizedfiles(lua_State * L, int terratable);
 
 #endif

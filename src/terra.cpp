@@ -142,6 +142,16 @@ int terra_lualoadstring(lua_State * L) {
     return 1;
 }
 
+//defines bytecodes for included lua source
+#include "terralib.h"
+#include "strict.h"
+#include "asdl.h"
+
+int terra_loadandrunbytecodes(lua_State * L, const unsigned char * bytecodes, size_t size, const char * name) {
+  return luaL_loadbuffer(L, (const char *)bytecodes, size, name) 
+           || lua_pcall(L,0,LUA_MULTRET,0);
+}
+
 #define abs_index(L, i) \
   ((i) > 0 || (i) <= LUA_REGISTRYINDEX ? (i) : lua_gettop(L) + (i) + 1)
   
@@ -234,14 +244,22 @@ int terra_initwithoptions(lua_State * L, terra_Options * options) {
     if(err) {
         return err;
     }
-
-    lua_getglobal(T->L,"terra");
-    err = terra_registerinternalizedfiles(L,-1);
+    err =    terra_loadandrunbytecodes(T->L,(const unsigned char*)luaJIT_BC_strict,luaJIT_BC_strict_SIZE, "strict.lua")
+          || terra_loadandrunbytecodes(T->L,(const unsigned char*)luaJIT_BC_asdl,luaJIT_BC_asdl_SIZE, "asdl.lua")
+#ifndef TERRA_EXTERNAL_TERRALIB
+          || terra_loadandrunbytecodes(T->L,(const unsigned char*)luaJIT_BC_terralib,luaJIT_BC_terralib_SIZE, "terralib.lua");
+#else
+          // make it possible to quickly iterate in terralib.lua when developing
+          || luaL_loadfile(T->L,TERRA_EXTERNAL_TERRALIB)
+          || lua_pcall(L,0,LUA_MULTRET,0);
+#endif
     if(err) {
         return err;
     }
     
     terra_cwrapperinit(T);
+
+    lua_getglobal(T->L,"terra");
     
     lua_pushcfunction(T->L,terra_luaload);
     lua_setfield(T->L,-2,"load");
@@ -261,9 +279,9 @@ int terra_initwithoptions(lua_State * L, terra_Options * options) {
     lua_pushinteger(L, T->options.debug);
     lua_setfield(L, -2, "isdebug");
     
-
+    terra_registerinternalizedfiles(L,-1);
     lua_pop(T->L,1); //'terra' global
-    
+
     luaX_init(T);
     terra_debuginit(T);
     err = terra_cudainit(T); /* if cuda is not enabled, this does nothing */
