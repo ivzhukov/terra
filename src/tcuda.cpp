@@ -19,7 +19,6 @@ extern "C" {
 #include "tcompilerstate.h"
 #include "tllvmutil.h"
 #include "tobj.h"
-#include "cudalib.h"
 #include <fstream>
 #include <sstream>
 #ifndef _WIN32
@@ -254,7 +253,7 @@ int terra_toptx(lua_State * L) {
     terra_State * T = terra_getstate(L, 1);
     initializeNVVMState(T);
     lua_getfield(L,1,"llvm_cu");
-    TerraCompilationUnit * CU = (TerraCompilationUnit*) terra_tocdatapointer(L,-1);
+    TerraCompilationUnit * CU = terra_tocompilationunit(L,-1);
     llvm::Module * M = CU->M;
     int annotations = 2;
     int dumpmodule = lua_toboolean(L,3);
@@ -332,10 +331,6 @@ int terra_cudainit(struct terra_State * T) {
     lua_pushcclosure(T->L,terra_toptx,1);
     lua_setfield(T->L,-2,"toptximpl");
     lua_pop(T->L,1); //terralib
-    int err = terra_loadandrunbytecodes(T->L, (const unsigned char *)luaJIT_BC_cudalib,luaJIT_BC_cudalib_SIZE, "cudalib.lua");
-    if(err) {
-        return err;
-    }
     return 0;
 }
 
