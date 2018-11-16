@@ -243,7 +243,7 @@ endif
 
 CLANG_RESOURCE_DIRECTORY=$(CLANG_PREFIX)/lib/clang/$(LLVM_VERSION_NUM)
 
-ifeq ($(ENABLE_CUDA),1)
+ifeq ($(strip $(ENABLE_CUDA)),1)
 CUDA_INCLUDES = -DTERRA_ENABLE_CUDA -I $(CUDA_HOME)/include -I $(CUDA_HOME)/nvvm/include
 FLAGS += $(CUDA_INCLUDES)
 endif
@@ -256,7 +256,10 @@ LIBOBJS = tkind.o tcompiler.o tllvmutil.o tcwrapper.o tinline.o terra.o lparser.
 ifeq ($(strip $(TERRA_USE_PUC_LUA)),1)
 LIBOBJS += tffi.o tffi_ctype.o tffi_parser.o
 endif
-LIBLUA = terralib.lua strict.lua cudalib.lua asdl.lua terralist.lua
+LIBLUA = terralib.lua strict.lua asdl.lua terralist.lua
+ifeq ($(strip $(ENABLE_CUDA)),1)
+LIBLUA += cudalib.lua
+endif
 
 EXEOBJS = main.o linenoise.o
 

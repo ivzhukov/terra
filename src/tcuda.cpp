@@ -19,7 +19,6 @@ extern "C" {
 #include "tcompilerstate.h"
 #include "tllvmutil.h"
 #include "tobj.h"
-#include "cudalib.h"
 #include <fstream>
 #include <sstream>
 #ifndef _WIN32
@@ -54,7 +53,7 @@ struct terra_CUDAState {
 #undef INIT_SYM
 };
 
-void initializeNVVMState(terra_State *T) {
+void initializeNVVMState(terra_State* T) {
     if (!T->cuda->initialized) {
 // dynamically assign all of our symbols
 #define INIT_SYM(x)                                                                     \
@@ -66,12 +65,12 @@ void initializeNVVMState(terra_State *T) {
     }
 }
 
-static void annotateKernel(terra_State *T, llvm::Module *M, llvm::Function *kernel,
-                           const char *name, int value) {
-    llvm::LLVMContext &ctx = M->getContext();
-    std::vector<METADATA_ROOT_TYPE *> vals;
-    llvm::NamedMDNode *annot = M->getOrInsertNamedMetadata("nvvm.annotations");
-    llvm::MDString *str = llvm::MDString::get(ctx, name);
+static void annotateKernel(terra_State* T, llvm::Module* M, llvm::Function* kernel,
+                           const char* name, int value) {
+    llvm::LLVMContext& ctx = M->getContext();
+    std::vector<METADATA_ROOT_TYPE*> vals;
+    llvm::NamedMDNode* annot = M->getOrInsertNamedMetadata("nvvm.annotations");
+    llvm::MDString* str = llvm::MDString::get(ctx, name);
 #if LLVM_VERSION <= 35
     vals.push_back(kernel);
     vals.push_back(str);
@@ -82,23 +81,23 @@ static void annotateKernel(terra_State *T, llvm::Module *M, llvm::Function *kern
     vals.push_back(llvm::ConstantAsMetadata::get(
             llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), value)));
 #endif
-    llvm::MDNode *node = llvm::MDNode::get(ctx, vals);
+    llvm::MDNode* node = llvm::MDNode::get(ctx, vals);
     annot->addOperand(node);
 }
 
-static const char *cudadatalayout =
+static const char* cudadatalayout =
         "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-"
         "v16:16:16-v32:32:32-v64:64:64-v128:128:128-n16:32:64";
 
 #if LLVM_VERSION <= 38
 class RemoveAttr : public llvm::InstVisitor<RemoveAttr> {
 public:
-    void visitCallInst(llvm::CallInst &I) { I.setAttributes(llvm::AttributeSet()); }
+    void visitCallInst(llvm::CallInst& I) { I.setAttributes(llvm::AttributeSet()); }
 };
 #endif
 
-void moduleToPTX(terra_State *T, llvm::Module *M, int major, int minor, std::string *buf,
-                 const char *libdevice) {
+void moduleToPTX(terra_State* T, llvm::Module* M, int major, int minor, std::string* buf,
+                 const char* libdevice) {
 #if LLVM_VERSION <= 38
     for (llvm::Module::iterator it = M->begin(), end = M->end(); it != end; ++it) {
         it->setAttributes(
@@ -144,7 +143,7 @@ void moduleToPTX(terra_State *T, llvm::Module *M, int major, int minor, std::str
         sstr << libdeviceFile.rdbuf();
         std::string libdeviceStr = sstr.str();
         size_t libdeviceModSize = libdeviceStr.size();
-        const char *libdeviceMod = libdeviceStr.data();
+        const char* libdeviceMod = libdeviceStr.data();
         CUDA_DO(T->cuda->nvvmAddModuleToProgram(prog, libdeviceMod, libdeviceModSize,
                                                 "libdevice"));
     }
@@ -152,7 +151,7 @@ void moduleToPTX(terra_State *T, llvm::Module *M, int major, int minor, std::str
     CUDA_DO(T->cuda->nvvmAddModuleToProgram(prog, llvmir.data(), llvmir.size(),
                                             M->getModuleIdentifier().c_str()));
     int numOptions = 1;
-    const char *options[] = {deviceopt.c_str()};
+    const char* options[] = {deviceopt.c_str()};
 
     size_t size;
     int err = T->cuda->nvvmCompileProgram(prog, numOptions, options);
@@ -194,7 +193,7 @@ void moduleToPTX(terra_State *T, llvm::Module *M, int major, int minor, std::str
         return;
     }
 
-    auto &LDEVICE = *E_LDEVICE;
+    auto& LDEVICE = *E_LDEVICE;
 
     llvm::TargetOptions opt;
     auto RM = llvm::Optional<llvm::Reloc::Model>();
@@ -263,18 +262,18 @@ static std::string sanitizeName(std::string name) {
     return s;
 }
 
-int terra_toptx(lua_State *L) {
-    terra_State *T = terra_getstate(L, 1);
+int terra_toptx(lua_State* L) {
+    terra_State* T = terra_getstate(L, 1);
     initializeNVVMState(T);
     lua_getfield(L, 1, "llvm_cu");
-    TerraCompilationUnit *CU = (TerraCompilationUnit *)terra_tocdatapointer(L, -1);
-    llvm::Module *M = CU->M;
+    TerraCompilationUnit* CU = terra_tocompilationunit(L, -1);
+    llvm::Module* M = CU->M;
     int annotations = 2;
     int dumpmodule = lua_toboolean(L, 3);
     int version = lua_tonumber(L, 4);
     int major = version / 10;
     int minor = version % 10;
-    const char *libdevice = lua_tostring(L, 5);
+    const char* libdevice = lua_tostring(L, 5);
 
     int N = lua_objlen(L, annotations);
     for (int i = 0; i < N; i++) {
@@ -282,10 +281,10 @@ int terra_toptx(lua_State *L) {
         lua_rawgeti(L, -1, 1);               // kernel name
         lua_rawgeti(L, -2, 2);               // annotation name
         lua_rawgeti(L, -3, 3);               // annotation value
-        const char *kernelname = luaL_checkstring(L, -3);
-        const char *annotationname = luaL_checkstring(L, -2);
+        const char* kernelname = luaL_checkstring(L, -3);
+        const char* annotationname = luaL_checkstring(L, -2);
         int annotationvalue = luaL_checkint(L, -1);
-        llvm::Function *kernel = M->getFunction(kernelname);
+        llvm::Function* kernel = M->getFunction(kernelname);
         assert(kernel);
         annotateKernel(T, M, kernel, annotationname, annotationvalue);
         lua_pop(L, 4);  // annotation table and 3 values in it
@@ -293,7 +292,7 @@ int terra_toptx(lua_State *L) {
 
     // sanitize names
     for (llvm::Module::iterator it = M->begin(), end = M->end(); it != end; ++it) {
-        const char *prefix = "cudart:";
+        const char* prefix = "cudart:";
         size_t prefixsize = strlen(prefix);
         std::string name = it->getName();
         if (name.size() >= prefixsize && name.substr(0, prefixsize) == prefix) {
@@ -324,11 +323,11 @@ int terra_toptx(lua_State *L) {
     return 1;
 }
 
-int terra_cudainit(struct terra_State *T) {
+int terra_cudainit(struct terra_State* T) {
     lua_getfield(T->L, LUA_GLOBALSINDEX, "terra");
     lua_getfield(T->L, -1, "cudalibpaths");
     lua_getfield(T->L, -1, "nvvm");
-    const char *libnvvmpath = lua_tostring(T->L, -1);
+    const char* libnvvmpath = lua_tostring(T->L, -1);
     lua_pop(T->L, 2);  // path and cudalibpaths
     if (llvm::sys::DynamicLibrary::LoadLibraryPermanently(libnvvmpath)) {
         llvm::SmallString<256> err;
@@ -339,20 +338,15 @@ int terra_cudainit(struct terra_State *T) {
         lua_pop(T->L, 1);  // terralib
         return 0;          // couldn't find the libnvvm library, do not load cudalib.lua
     }
-    T->cuda = (terra_CUDAState *)malloc(sizeof(terra_CUDAState));
+    T->cuda = (terra_CUDAState*)malloc(sizeof(terra_CUDAState));
     T->cuda->initialized =
             0; /* actual CUDA initalization is done on first call to terra_cudacompile */
                /* this function just registers all the Lua state associated with CUDA */
 
-    lua_pushlightuserdata(T->L, (void *)T);
+    lua_pushlightuserdata(T->L, (void*)T);
     lua_pushcclosure(T->L, terra_toptx, 1);
     lua_setfield(T->L, -2, "toptximpl");
     lua_pop(T->L, 1);  // terralib
-    int err = terra_loadandrunbytecodes(T->L, (const unsigned char *)luaJIT_BC_cudalib,
-                                        luaJIT_BC_cudalib_SIZE, "cudalib.lua");
-    if (err) {
-        return err;
-    }
     return 0;
 }
 
@@ -361,7 +355,7 @@ int terra_cudainit(struct terra_State *T) {
 int terra_cudainit(struct terra_State* T) { return 0; }
 #endif
 
-int terra_cudafree(struct terra_State *T) {
+int terra_cudafree(struct terra_State* T) {
     // currently nothing to clean up
     return 0;
 }
