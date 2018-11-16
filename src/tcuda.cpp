@@ -19,6 +19,7 @@ extern "C" {
 #include "tcompilerstate.h"
 #include "tllvmutil.h"
 #include "tobj.h"
+#include "cudalib.h"
 #include <fstream>
 #include <sstream>
 #ifndef _WIN32
@@ -338,6 +339,10 @@ int terra_cudainit(struct terra_State * T) {
     lua_pushcclosure(T->L,terra_toptx,1);
     lua_setfield(T->L,-2,"toptximpl");
     lua_pop(T->L,1); //terralib
+    int err = terra_loadandrunbytecodes(T->L, (const unsigned char *)luaJIT_BC_cudalib,luaJIT_BC_cudalib_SIZE, "cudalib.lua");
+    if(err) {
+        return err;
+    }
     return 0;
 }
 
