@@ -434,11 +434,6 @@ int terra_initwithoptions(lua_State *L, terra_Options *options) {
     lua_pop(T->L, 1);  //'terra' global
 #endif
 
-    err = terra_cudainit(T); /* if cuda is not enabled, this does nothing */
-    if (err) {
-        return err;
-    }
-
     lua_getglobal(T->L, "terra");
     err = terra_registerinternalizedfiles(L, -1);
     if (err) {
@@ -469,6 +464,10 @@ int terra_initwithoptions(lua_State *L, terra_Options *options) {
 
     luaX_init(T);
     terra_debuginit(T);
+    err = terra_cudainit(T); /* if cuda is not enabled, this does nothing */
+    if (err) {
+        return err;
+    }
     return 0;
 }
 

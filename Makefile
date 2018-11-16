@@ -256,10 +256,7 @@ LIBOBJS = tkind.o tcompiler.o tllvmutil.o tcwrapper.o tinline.o terra.o lparser.
 ifeq ($(strip $(TERRA_USE_PUC_LUA)),1)
 LIBOBJS += tffi.o tffi_ctype.o tffi_parser.o
 endif
-LIBLUA = terralib.lua strict.lua asdl.lua terralist.lua
-ifeq ($(strip $(ENABLE_CUDA)),1)
-LIBLUA += cudalib.lua
-endif
+LIBLUA = terralib.lua strict.lua cudalib.lua asdl.lua terralist.lua
 
 EXEOBJS = main.o linenoise.o
 
