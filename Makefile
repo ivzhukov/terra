@@ -176,7 +176,7 @@ endif
 ifneq ($(LLVM_VERSION), 32)
 CPPFLAGS += -std=c++11
 endif
-CFLAGS += -std=c99
+C99FLAGS += -std=c99
 
 
 ifneq ($(findstring $(UNAME), Linux FreeBSD),)
@@ -287,7 +287,7 @@ build/%.o:	src/%.cpp $(PACKAGE_DEPS)
 	$(CXX) $(FLAGS) $(CPPFLAGS) $< -c -o $@
 
 build/%.o:	src/%.c $(PACKAGE_DEPS)
-	$(CC) $(FLAGS) $(CFLAGS) $< -c -o $@
+	$(CC) $(FLAGS) $(C99FLAGS) $< -c -o $@
 
 download: build/$(LUA_TAR)
 
