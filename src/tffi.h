@@ -110,17 +110,6 @@ static char* luaL_prepbuffsize(luaL_Buffer* B, size_t sz) {
 # define OS_POSIX
 #endif
 
-/* architecture */
-#if defined __i386__ || defined _M_IX86
-# define ARCH_X86
-#elif defined __amd64__ || defined _M_X64
-# define ARCH_X64
-#elif defined __arm__ || defined __ARM__ || defined ARM || defined __ARM || defined __arm
-# define ARCH_ARM
-#else
-# error
-#endif
-
 
 #ifdef _WIN32
 
@@ -157,9 +146,7 @@ static char* luaL_prepbuffsize(luaL_Buffer* B, size_t sz) {
 #   define EnableWrite(data, size) mprotect(data, size, PROT_READ|PROT_WRITE)
 #endif
 
-#if defined ARCH_X86 || defined ARCH_X64
 #define ALLOW_MISALIGNED_ACCESS
-#endif
 
 struct token;
 
