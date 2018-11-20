@@ -2883,32 +2883,6 @@ static int setup_upvals(lua_State* L) {
     /* setup ABI params table */
     push_upval(L, &abi_key);
 
-#if defined ARCH_X86 || defined ARCH_ARM
-    lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "32bit");
-#elif defined ARCH_X64
-    lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "64bit");
-#else
-#error
-#endif
-
-#if defined ARCH_X86 || defined ARCH_X64 || defined ARCH_ARM
-    lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "le");
-#else
-#error
-#endif
-
-#if defined ARCH_X86 || defined ARCH_X64
-    lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "fpu");
-#elif defined ARCH_ARM
-    lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "softfp");
-#else
-#error
-#endif
     lua_pop(L, 1); /* abi tbl */
 
     /* GC table - shouldn't pin cdata values */
@@ -2936,18 +2910,6 @@ static int setup_upvals(lua_State* L) {
     lua_pushliteral(L, "Other");
 #endif
     lua_setfield(L, 1, "os");
-
-    /* ffi.arch */
-#if defined ARCH_X86
-    lua_pushliteral(L, "x86");
-#elif defined ARCH_X64
-    lua_pushliteral(L, "x64");
-#elif defined ARCH_ARM
-    lua_pushliteral(L, "arm");
-#else
-#error
-#endif
-    lua_setfield(L, 1, "arch");
 
     assert(lua_gettop(L) == 1);
 

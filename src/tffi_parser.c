@@ -1173,26 +1173,12 @@ static int parse_attribute(lua_State* L, struct parser* P, struct token* tok,
                         ct->base_size = sizeof(uint16_t);
                         ct->align_mask = ALIGNOF(a16);
 
-                    } else if (IS_LITERAL(*tok, "SI") || IS_LITERAL(*tok, "__SI__")
-#if defined ARCH_X86 || defined ARCH_ARM
-                               || IS_LITERAL(*tok, "word") ||
-                               IS_LITERAL(*tok, "__word__") ||
-                               IS_LITERAL(*tok, "pointer") ||
-                               IS_LITERAL(*tok, "__pointer__")
-#endif
-                    ) {
+                    } else if (IS_LITERAL(*tok, "SI") || IS_LITERAL(*tok, "__SI__")) {
                         ct->type = INT32_TYPE;
                         ct->base_size = sizeof(uint32_t);
                         ct->align_mask = ALIGNOF(a32);
 
-                    } else if (IS_LITERAL(*tok, "DI") || IS_LITERAL(*tok, "__DI__")
-#if defined ARCH_X64
-                               || IS_LITERAL(*tok, "word") ||
-                               IS_LITERAL(*tok, "__word__") ||
-                               IS_LITERAL(*tok, "pointer") ||
-                               IS_LITERAL(*tok, "__pointer__")
-#endif
-                    ) {
+                    } else if (IS_LITERAL(*tok, "DI") || IS_LITERAL(*tok, "__DI__")) {
                         ct->type = INT64_TYPE;
                         ct->base_size = sizeof(uint64_t);
                         ct->align_mask = ALIGNOF(a64);
