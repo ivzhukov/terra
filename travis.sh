@@ -5,7 +5,13 @@ set -x
 
 if [[ $(uname) = Linux ]]; then
   sudo apt-get update -qq
-  if [[ $LLVM_CONFIG = llvm-config-6.0 ]]; then
+  if [[ $LLVM_CONFIG = llvm-config-7 ]]; then
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+    sudo add-apt-repository -y "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main"
+    for i in {1..5}; do sudo apt-get update -qq && break || sleep 15; done
+    sudo apt-get install -y llvm-7-dev clang-7 libclang-7-dev libedit-dev
+    export CMAKE_PREFIX_PATH=/usr/lib/llvm-7:/usr/share/llvm-7
+  elif [[ $LLVM_CONFIG = llvm-config-6.0 ]]; then
     sudo apt-get install -qq llvm-6.0-dev clang-6.0 libclang-6.0-dev libedit-dev
     export CMAKE_PREFIX_PATH=/usr/lib/llvm-6.0:/usr/share/llvm-6.0
   elif [[ $LLVM_CONFIG = llvm-config-5.0 ]]; then
@@ -38,7 +44,13 @@ if [[ $(uname) = Linux ]]; then
 fi
 
 if [[ $(uname) = Darwin ]]; then
-  if [[ $LLVM_CONFIG = llvm-config-6.0 ]]; then
+  if [[ $LLVM_CONFIG = llvm-config-7 ]]; then
+    curl -O http://releases.llvm.org/7.0.0/clang+llvm-7.0.0-x86_64-apple-darwin.tar.xz
+    tar xf clang+llvm-7.0.0-x86_64-apple-darwin.tar.xz
+    ln -s clang+llvm-7.0.0-x86_64-apple-darwin/bin/llvm-config llvm-config-7
+    ln -s clang+llvm-7.0.0-x86_64-apple-darwin/bin/clang clang-7
+    export CMAKE_PREFIX_PATH=$PWD/clang+llvm-7.0.0-x86_64-apple-darwin
+  elif [[ $LLVM_CONFIG = llvm-config-6.0 ]]; then
     curl -O http://releases.llvm.org/6.0.0/clang+llvm-6.0.0-x86_64-apple-darwin.tar.xz
     tar xf clang+llvm-6.0.0-x86_64-apple-darwin.tar.xz
     ln -s clang+llvm-6.0.0-x86_64-apple-darwin/bin/llvm-config llvm-config-6.0
@@ -65,10 +77,13 @@ if [[ $(uname) = Darwin ]]; then
 
   if [[ $USE_CUDA -eq 1 ]]; then
     curl -o cuda.dmg -L https://developer.nvidia.com/compute/cuda/9.2/Prod2/local_installers/cuda_9.2.148_mac
+    echo "defb095aa002301f01b2f41312c9b1630328847800baa1772fe2bbb811d5fa9f  cuda.dmg" | shasum -c -a 256
     hdiutil attach cuda.dmg
     # This is probably the "correct" way to do it, but it times out on Travis.
     # /Volumes/CUDAMacOSXInstaller/CUDAMacOSXInstaller.app/Contents/MacOS/CUDAMacOSXInstaller --accept-eula --silent --no-window --install-package=cuda-toolkit
-    brew install gnu-tar
+    # There is a bug in GNU Tar 1.31 which causes a crash; stick to 1.30 for now.
+    brew tap elliottslaughter/tap
+    brew install gnu-tar@1.30
     sudo gtar xf /Volumes/CUDAMacOSXInstaller/CUDAMacOSXInstaller.app/Contents/Resources/payload/cuda_mac_installer_tk.tar.gz -C / --no-overwrite-dir --no-same-owner
     hdiutil detach /Volumes/CUDAMacOSXInstaller
   fi

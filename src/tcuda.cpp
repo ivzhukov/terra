@@ -95,7 +95,6 @@ public:
 #endif
 
 void moduleToPTX(terra_State * T, llvm::Module * M, int major, int minor, std::string * buf, const char * libdevice) {
-    
 #if LLVM_VERSION <= 38
     for(llvm::Module::iterator it = M->begin(), end = M->end(); it != end; ++it) {
         it->setAttributes(llvm::AttributeSet()); //remove annotations because syntax doesn't match
@@ -216,10 +215,17 @@ void moduleToPTX(terra_State * T, llvm::Module * M, int major, int minor, std::s
 
     PMB.populateModulePassManager(PM);
 
+    #if LLVM_VERSION >= 70
+    if (TargetMachine->addPassesToEmitFile(PM, str_dest, nullptr, FileType)) {
+        llvm::errs() << "TargetMachine can't emit a file of this type\n";
+        return;
+    }
+    #else
     if (TargetMachine->addPassesToEmitFile(PM, str_dest, FileType)) {
         llvm::errs() << "TargetMachine can't emit a file of this type\n";
         return;
     }
+    #endif
 
     PM.run(*M);
     buf->resize(dest.size());
