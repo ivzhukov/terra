@@ -297,7 +297,8 @@ build/$(LUA_TAR):
 ifeq ($(strip $(TERRA_USE_PUC_LUA)),1)
 $(LUA_LIB): build/$(LUA_TAR)
 	(cd build; tar -xf $(LUA_TAR))
-	(cd $(LUA_DIR); $(MAKE) $(LUA_TARGET) install INSTALL_TOP="$(LUA_PREFIX)" CC="$(CC) $(PIC_FLAG)")
+	(cd $(LUA_DIR); $(MAKE) $(LUA_TARGET) INSTALL_TOP="$(LUA_PREFIX)" CC="$(CC) $(PIC_FLAG)")
+	(cd $(LUA_DIR); $(MAKE) install INSTALL_TOP="$(LUA_PREFIX)" CC="$(CC) $(PIC_FLAG)")
 else
 $(LUA_LIB): build/$(LUA_TAR)
 	(cd build; tar -xf $(LUA_TAR))
@@ -305,7 +306,6 @@ $(LUA_LIB): build/$(LUA_TAR)
 	(cd $(LUA_DIR); $(MAKE) install PREFIX="$(LUA_PREFIX)" CC="$(CC)" STATIC_CC="$(CC) $(PIC_FLAG)" MACOSX_DEPLOYMENT_TARGET=10.6)
 endif
 
-# FIXME: This rule doesn't work on first build because the dependencies don't exist yet
 release/include/terra/%.h:  $(LUA_INCLUDE)/%.h $(LUA_LIB) 
 	cp $(LUA_INCLUDE)/$*.h $@
     
