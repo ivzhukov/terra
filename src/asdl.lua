@@ -1,3 +1,5 @@
+jit.off()
+
 local List = require("terralist")
 
 local Context = {}
