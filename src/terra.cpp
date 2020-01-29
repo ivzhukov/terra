@@ -156,6 +156,7 @@ int terra_lualoadstring(lua_State *L) {
 #include "terralib.h"
 #include "strict.h"
 #include "asdl.h"
+#include "terralist.h"
 
 int terra_loadandrunbytecodes(lua_State *L, const unsigned char *bytecodes, size_t size,
                               const char *name) {
@@ -447,6 +448,8 @@ int terra_initwithoptions(lua_State *L, terra_Options *options) {
 
     err = terra_loadandrunbytecodes(T->L, (const unsigned char *)luaJIT_BC_strict,
                                     luaJIT_BC_strict_SIZE, "strict.lua") ||
+          terra_loadandrunbytecodes(T->L, (const unsigned char *)luaJIT_BC_terralist,
+                                    luaJIT_BC_terralist_SIZE, "terralist.lua") ||
           terra_loadandrunbytecodes(T->L, (const unsigned char *)luaJIT_BC_asdl,
                                     luaJIT_BC_asdl_SIZE, "asdl.lua")
 #ifndef TERRA_EXTERNAL_TERRALIB
